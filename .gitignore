@@ -1,3 +1,5 @@
 *.pyc
 products.p
 products.json.gz
+*.txt
+test_*.py
