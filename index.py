@@ -1,95 +1,134 @@
 """
     Index module for IR system
+
+    Use the function run to load (or build) index file and print metadata.
+
 """
-import urllib2
-import gzip
-import json
+
+from future.utils import iteritems
+from retrieve_data import *
 import os
 import pickle
-
-gzFile = './products.json.gz'
-indexFile = './products.p'
-
-def downloadData(url, dst):
-    filedata = urllib2.urlopen(url)  
-    data = filedata.read()
-    with open(dst, 'wb') as f:  
-        f.write(data)
-        f.close()
+import nltk
+from nltk.corpus import stopwords
+import pprint
+import sys
+from nltk.stem import WordNetLemmatizer
 
 
-def getRemoteData(url):
-    if not os.path.isfile(gzFile):
-        downloadData(url, gzFile)
-        deleteFiles([indexFile])
+wordnet_lemmatizer = WordNetLemmatizer()
 
-def deleteFiles(files):
-    for f in files:
-        if os.path.isfile(f):
-            os.remove(f)
 
-def loadData():
-    with gzip.GzipFile(gzFile, 'r') as fin:
-        data = json.loads(fin.read().decode('utf-8'))
-        return data
-    raise IOError("Error loading %s"%(gzFile))
+def _addToIndex(dataIndex, word, field, docId, pos):
+    """ Add word to index
 
-def printDataMeta(data):
-    """Shows meta-information of data"""
-    print("%d elements."%(len(data)))
-    print("Type of line0: %s." %(type(data[0])))
-    print("Fields: %s." % (data[0].keys()))
+    Arguments:
+
+        (inout) dataIndex: the index (dict)  
+        word: word to add 
+        field: field where the word was found
+        docId: id of the document
+        pos: position in the field
+
+    """
+    try:
+        wordInfo = dataIndex[word]
+    except KeyError:
+        wordInfo = {}
+    try:
+        fieldInfo = wordInfo[field]
+    except KeyError:
+        fieldInfo = {}
+    try:
+        docInfo = fieldInfo[docId]
+    except KeyError:
+        docInfo = []
+    docInfo.append(pos)
+    fieldInfo[docId] = docInfo
+    wordInfo[field] = fieldInfo
+    dataIndex[word] = wordInfo
+
+
+def addToIndex(dataIndex, word, field, docId, pos):
+    """ Add word and its derivatives to index
+
+    Arguments:
+
+        (inout) dataIndex: the index (dict)  
+        word: word to add 
+        field: field where the word was found
+        docId: id of the document
+        pos: position in the field
+
+    """
+    w = word.lower()
+    _addToIndex(dataIndex, word, field, docId, pos)
+    # lemmatization
+    w = wordnet_lemmatizer.lemmatize(w)
+    _addToIndex(dataIndex, w, field, docId, pos)
+
 
 def index(data):
+    """ Builds the index from input data.
+
+    Argument:
+
+        List of documents
+
+    Returns:
+
+        dict of word -> dict of field -> dict of docId -> list of positions. 
+
+    """
+    special = list(u',.;:()[]$%^@!*{}+=&<>/"\'')
     dataIndex = {}
     docId = 0
     for line in data:
         for field in line.keys():
             string = line[field]
+            tokens = tokenizeField(line[field])
             pos = 0
-            for word in string.split():
-                w = word.lower()
-                info = (field, pos)
-                try:
-                    wordInfo = dataIndex[w]
-                except KeyError:
-                    wordInfo = {}
-                try:
-                    docInfo = wordInfo[docId]
-                except KeyError:
-                    docInfo = []
-                docInfo.append(info)
-                wordInfo[docId] = docInfo
-                dataIndex[w] = wordInfo
+            for word in tokens:
+                if word not in special:
+                    w = word.lower()
+                    addToIndex(dataIndex, w, field, docId, pos)
                 pos += 1
         docId += 1  
     return dataIndex            
 
 def printIndexMeta(dataIndex):
-    print("Number of Keys: %d."%(len(dataIndex)))
+    """ Print a summary of the index """
+    print("Number of words indexed: %d."%(len(dataIndex)))
 
-def countFun(wordInfo):
+def countFun(dataIndex, word):
+    """ Count the number of occurences of a word.
+
+    Return:
+        count 
+    """
+
+    if word not in dataIndex:
+        return 0
+    wordInfo = dataIndex[word]
     cnt = 0
-    for docId in wordInfo.keys():
-        cnt += len(wordInfo[docId])
+    for field, fieldInfo in iteritems(wordInfo):
+        for docId, docInfo in iteritems(fieldInfo): 
+            cnt += len(docInfo)
     return cnt
 
-def histFun(dataIndex, word):
-    if len(word)>4:
-        return countFun(dataIndex[word])
-    else:
-        return 0
 
 def printIndexDebug(dataIndex):
-    histogram  = sorted(dataIndex.keys(), key=lambda w: -histFun(dataIndex,w))
-    print("Histogram==")
-    for i in range(20):
-        print("%s: %d ocurrence(s)."%(histogram[i],countFun(dataIndex[histogram[i]])))
+    """ Print index debug information. """
+    words = [key for key in dataIndex.keys() if len(key)>2] 
+    histogram  = sorted(words, key=lambda w: -countFun(dataIndex,w))
+    print("==Histogram==")
+    for i in range(len(histogram)):
+        print("%s: %d ocurrence(s)."%(histogram[i].encode('utf-8'),countFun(dataIndex,histogram[i])))
     
-
 def createOrLoadIndex(data):
+    """ Load (build) the index from the list of documents"""
     try:
-        print("Try load index...")
+        print("Load index...")
         dataIndex = loadIndex()
     except IOError:
         print("Build index...")
@@ -98,6 +137,7 @@ def createOrLoadIndex(data):
     return dataIndex
 
 def loadIndex():
+    """ Load index from local file"""
     if os.path.isfile(indexFile):
         dataIndex = pickle.load( open( indexFile, "rb" ) )
     else:
@@ -106,22 +146,25 @@ def loadIndex():
 
 def test():
     """Basic testing of module"""
-    print("Testing...")
-    #deleteFiles([gzFile, indexFile])
-    dataIndex = run()
+    print("Testing Index...")
+    deleteFiles([indexFile])
+    data = loadData()
+    dataIndex = run(data)
     printIndexDebug(dataIndex)
 
-
-def run():
-    url = "https://s3-eu-west-1.amazonaws.com/pricesearcher-code-tests/software-engineer/products.json.gz"
-    print("Get data...")
-    getRemoteData(url)  
-    data = loadData()  
-    printDataMeta(data)
-    print("Index data...")
+def run(data):
     dataIndex = createOrLoadIndex(data)
     printIndexMeta(dataIndex)
     return dataIndex
+
+
+def tokenizeField(s):
+    """ Tokenize a field  """
+    special = list('@=+-#%&*[]{}()?/"\';.,')
+    stop = stopwords.words("english")
+    s = s.replace('-',' - ');
+    lst = nltk.word_tokenize(s)
+    return [w for w in lst if w not in stop and w not in special]
 
 
 if __name__ == "__main__":
