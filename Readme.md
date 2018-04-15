@@ -36,14 +36,13 @@ field.
 
 To disable a previously set field name, use the keyword "all:"
 
-> merchant: lewis all: shirt
+	> merchant: lewis all: shirt
 
 ## Exit the program
 
 To exit the program, enter a single character "q".
 
 	> q
-
 
 ## Force download the database
 

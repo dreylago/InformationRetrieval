@@ -23,6 +23,7 @@ indexFile = './products.p'
 
 def downloadData(url, dst):
     """ Download data and save it locally """
+    print("Downloading json file...")
     filedata = urllib2.urlopen(url)  
     data = filedata.read()
     with open(dst, 'wb') as f:  
