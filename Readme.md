@@ -38,6 +38,11 @@ To disable a previously set field name, use the keyword "all:"
 
 	> merchant: lewis all: shirt
 
+*Important*: At this stage, field-specific searches 
+just increase the weight of the matches on the corresponding field. 
+If a little more time is allowed, a better filter can be implemented
+in the `weighWord` functions.
+
 ## Exit the program
 
 To exit the program, enter a single character "q".
