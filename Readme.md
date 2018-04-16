@@ -5,7 +5,7 @@ This is a simple information retrieval system.
 ## Requirements
 
 1. Python 2.7
-2. Noteworthy modules: nltk. 
+2. Noteworthy modules: nltk, future. 
 
 # Usage
 
@@ -63,6 +63,15 @@ search.py is run.
 To rebuild the index, run the index module.
 
 	$ python index.py 
+
+
+# Implementation
+
+A this moment, the following features are implemented:
+
+1. Basic NLP (tokenization, lemmatization, stopwords).
+2. Field-specific weighting scheme.
+
 
 
 
