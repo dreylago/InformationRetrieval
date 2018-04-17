@@ -16,7 +16,7 @@ from print_docs import printDocs
 from parse_query import parseQuery
 
 def getDocLst(docs):
-    """ Order list of documents and normalize weights.
+    """ Order list of documents according to weight.
 
     Arguments:
         docs: dict of docId -> weight
@@ -27,22 +27,11 @@ def getDocLst(docs):
     """
 
     # convert to list
-    _docLst = []
-    maxWeight = -1.
+    docLst = []
     for docId, weight in iteritems(docs):
         if weight > 0.:
-            _docLst.append((docId, weight))
-            if weight > maxWeight:
-                maxWeight = weight
-
-    # normalize weights
-    docLst = []
-    for docId, _weight in _docLst:
-        weight = _weight
-        if maxWeight > 0.1:
-            weight = _weight / maxWeight
-        docLst.append((docId, weight))
-
+            docLst.append((docId, weight))
+            
     # sort by weight
     return sorted(docLst, key=lambda x: -x[1])
 
@@ -59,7 +48,7 @@ def search(data, dataIndex, query):
     _docs = parseQuery(dataIndex, query)
     docs = getDocLst(_docs)
     if len(docs)>0:
-        printDocs(data, docs)
+        printDocs(data, docs, query)
     else:
         print("Nothing found.")
 

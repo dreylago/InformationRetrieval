@@ -5,51 +5,77 @@ from nltk.stem import WordNetLemmatizer
 wordnet_lemmatizer = WordNetLemmatizer()
 
 
-def _weightWord(docs, dataIndex, word, onField=u"all"):
-    """ Add a weight to documents that contain the word
+def calcWeight(pos, field, onField):
+    """ Calculate weight of matched word 
 
     Arguments:
 
-        (inout) docs: dict of docId -> weight
-        dataIndex: the index
-        word: the word
-        onField: if not none, search only on specified field (title, merchant, description, all)
+        [int]  pos: position of word in the field
+        [str]  field: field where the word was found
+        [str]  onField: specific field to search for (title, merchant, description, all)
+
+    Return:
+
+        [float] weight 
+
+    """
+
+    weight = 0.
+    # Assign weights according to field
+    if field == u'title':
+        # words in title weight more
+        weight += 5. 
+    elif field == u'merchant':
+        weight += 1. 
+    else:
+        weight += 1. / (pos + 1.)
+
+    # increase weight if onField is set and matches current field
+    if field == onField:
+        weight *= 2.
+
+    return weight
+
+
+def _weighWord(docs, dataIndex, word, onField=u"all", factor=1.0):
+    """ Add a weight to documents that contain the word
+    (helper function)
+
+    Arguments:
+
+        [dict] (inout) docs: dict of docId -> weight
+        [dict] dataIndex: the index
+        [str]  word: the word
+        [str]  onField: specific field to search for (title, merchant, description, all)
+        [float] factor: multiplicative factor
+
+    Returns
+
+        [bool] word was found in a document
 
     """
 
     if word not in dataIndex:
-        return 
+        return False
 
     wordInfo = dataIndex[word]
 
     for field, fieldInfo in iteritems(wordInfo):
         # skip if onField is not all and is different than current field
-        if onField != u"all":
-            if field != onField:
+        if onField != u"all" and field != onField:
                 continue
 
         for docId, docInfo in iteritems(fieldInfo):
             for pos in docInfo:
-                weight = 0.
-                # Assign weights according to field
-                if field == u'title':
-                    # words in title weight more
-                    weight += 5.
-                elif field == u'merchant':
-                    weight += 1.
+                weight = calcWeight(pos, field, onField) * factor
+                if docId in docs:
+                   docs[docId] += weight
                 else:
-                    # words in description weight more
-                    # if they are found earlier
-                    weight += 1. / (pos + 1.)
-                # increase weight if onField is set
-                if field == onField:
-                    weight += 10.
-            if docId in docs:
-                docs[docId] += weight
-            else:
-                docs[docId] = weight 
+                    docs[docId] = weight 
 
-def weightWord(docs, dataIndex, word, onField=u"all"):
+    return True
+
+def weighWord(docs, dataIndex, word, onField=u"all"):
     """ Add a weight to documents that contain the word
     or its derivatives
 
@@ -58,21 +84,23 @@ def weightWord(docs, dataIndex, word, onField=u"all"):
         (inout) docs: dict of docId -> weight
         dataIndex: the index
         word: the word
-        onField: if not none, search only on specified field (title, merchant, description, all)
+        onField: specific field to search for (title, merchant, description, all)
 
     """
+    # exact word
     w = word.lower()
-    _weightWord(docs, dataIndex, w, onField)
-    w = wordnet_lemmatizer.lemmatize(w)
-    _weightWord(docs, dataIndex, w, onField)
-
+    _weighWord(docs, dataIndex, w, onField)
+    # lemmatization
+    lemma = wordnet_lemmatizer.lemmatize(w)
+    # weigh the documents again with a damping factor
+    _weighWord(docs, dataIndex, lemma, onField, 0.5)
 
 def parseQuery(dataIndex, query):
     """ Naive query string parser.
 
     Arguments:
-        dataIndex: the index
-        query: query string
+        [dict] dataIndex: the index
+        [str] query: query 
 
     The query string is a list of words that will be searched in
     all fields. Example:
@@ -93,7 +121,7 @@ def parseQuery(dataIndex, query):
     > merchant: lewis all: shirt
 
     In the future a proper query parser could be build enabling
-    and/or logical operators (using reentrant functions).
+    and/or logical operators (using recursive function).
 
     Returns:
 
@@ -116,13 +144,14 @@ def parseQuery(dataIndex, query):
         if w in [u'merchant',u'description',u'title',u'all'] and next == ':':
             field = w
         else:
-            weightWord(docs, dataIndex, w, field)
+            weighWord(docs, dataIndex, w, field)
     return docs
 
 
 def tokenizeQuery(s):
     """ Tokenize a query string """
     special = list('@=+-#%&*[]{}()?/"\';.,')
+    # temporary nltk fix 
     s = s.replace('-',' - ');
     lst = nltk.word_tokenize(s)
     return [w for w in lst if w not in special]

@@ -67,10 +67,43 @@ To rebuild the index, run the index module.
 
 # Implementation
 
-A this moment, the following features are implemented:
+## Version 0.1
 
 1. Basic NLP (tokenization, lemmatization, stopwords).
 2. Field-specific weighting scheme.
+3. Positional weighting scheme.
+
+## Version 0.2
+
+Improvements of this version:
+	
+1. Better documentation
+2. Better function naming
+3. Function modularization (calcWeight)
+4. Weight factor modified by exact or lemma match
+5. Save search to file for later inspection
+6. Avoid some duplication in indexing
+
+## Future versions
+
+1. The most obvious improvement would be to index the
+POS (Part-of-speech) tag of the word, along with the
+position. Nouns could be given a higher weight that
+verbs when matched at search time.
+2. Spelling correction, proximity, etc.
+
+
+
+
+
+
+
+
+
+
+ 
+
+
 
 
 
