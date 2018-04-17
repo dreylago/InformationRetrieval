@@ -80,7 +80,7 @@ Improvements of this version:
 1. Better documentation
 2. Better function naming
 3. Function modularization (calcWeight)
-4. Weight factor modified by exact or lemma match
+4. Weight factor modified by word or lemma match
 5. Save search to file for later inspection
 6. Avoid some duplication in indexing
 
@@ -88,9 +88,10 @@ Improvements of this version:
 
 1. The most obvious improvement would be to index the
 POS (Part-of-speech) tag of the word, along with the
-position. Nouns could be given a higher weight that
-verbs when matched at search time.
+position. Nouns in the title could be given a higher weight that
+verbs when matched at search time. 
 2. Spelling correction, proximity, etc.
+3. More advanced corpus indexing.
 
 
 
