@@ -64,8 +64,9 @@ def addToIndex(dataIndex, word, field, docId, pos):
     w = word.lower()
     _addToIndex(dataIndex, word, field, docId, pos)
     # lemmatization
-    w = wordnet_lemmatizer.lemmatize(w)
-    _addToIndex(dataIndex, w, field, docId, pos)
+    lemma = wordnet_lemmatizer.lemmatize(w)
+    if lemma != w:
+        _addToIndex(dataIndex, lemma, field, docId, pos)
 
 
 def index(data):

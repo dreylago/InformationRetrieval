@@ -52,12 +52,12 @@ def loadData():
 
     with gzip.GzipFile(gzFile, 'r') as fin:
         data = json.loads(fin.read().decode('utf-8'))
+        print("%d products in DB."%(len(data)))
         return data
     raise IOError("Error loading %s"%(gzFile))
 
 def printDataMeta(data):
     """Shows meta-information of data"""
-    print("%d elements."%(len(data)))
     print("Type of line0: %s." %(type(data[0])))
     print("Fields: %s." % (data[0].keys()))
 
