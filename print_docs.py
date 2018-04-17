@@ -6,7 +6,7 @@
 def printDocs(data, docs):
     
     descriptionMaxLen = 4000
-    pageSize = 4
+    pageSize = 3
 
     sep = ""
     i = 0

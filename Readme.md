@@ -5,7 +5,7 @@ This is a simple information retrieval system.
 ## Requirements
 
 1. Python 2.7
-2. Noteworthy modules: nltk. 
+2. Noteworthy modules: nltk, future. 
 
 # Usage
 
@@ -36,14 +36,18 @@ field.
 
 To disable a previously set field name, use the keyword "all:"
 
-> merchant: lewis all: shirt
+	> merchant: lewis all: shirt
+
+*Important*: At this stage, field-specific searches 
+just increase the weight of the matches on the corresponding field. 
+If a little more time is allowed, a better filter can be implemented
+in the `weighWord` functions.
 
 ## Exit the program
 
 To exit the program, enter a single character "q".
 
 	> q
-
 
 ## Force download the database
 
@@ -59,6 +63,15 @@ search.py is run.
 To rebuild the index, run the index module.
 
 	$ python index.py 
+
+
+# Implementation
+
+A this moment, the following features are implemented:
+
+1. Basic NLP (tokenization, lemmatization, stopwords).
+2. Field-specific weighting scheme.
+
 
 
 
