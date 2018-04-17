@@ -17,7 +17,7 @@ It will download the json database and build the index in the first run.
 
 A search prompt will appear. The query string is a list of words that will be searched in all fields. Example:
 
-    > light bulb
+    > led light bulb
 
 The IR will show a list of documents ordered according to relevance. The
 list is paginated. Pressing Enter will show the next page (Pressing "q"
@@ -83,6 +83,7 @@ Improvements of this version:
 4. Weight factor modified by word or lemma match
 5. Save search to file for later inspection
 6. Avoid some duplication in indexing
+7. Display result weights for better debugging
 
 ## Future versions
 
