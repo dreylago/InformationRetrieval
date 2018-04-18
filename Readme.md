@@ -87,18 +87,22 @@ Improvements of this version:
 
 ## Future versions
 
-1. The first step is to fix a bug on "search by field". 
+1. Improve  "search by field". 
 Currently, it is implemented via weight manipulation (i.e.
 if the word is match in the desired field, the weight
 is multiplied). This approach works well for only one field. But if we search
-in two or more fields at the same time, the results are not so good. 
-It is probably better to implement it as a filter.
-2. The most obvious improvement would be to index the
+in two or more fields at the same time, the results may not be what should
+be expected. It is probably better to implement it as a filter.
+2. Index the
 POS (Part-of-speech) tag of the word, along with the
 position. Nouns in the title could be given a higher weight that
 verbs when matched at search time. 
-3. Spelling correction, proximity, etc.
-4. More advanced corpus indexing.
+3. The output of the function `wheighWord` (docs dict) could hold
+more  information that just the gained weight. Some more 
+information could help "global" query evaluation. For instance,
+proximity of the words matched (on the query and on the field).   
+4. Spelling correction, etc.
+5. More advanced corpus indexing.
 
 
 
